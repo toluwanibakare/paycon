@@ -1,17 +1,17 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { IconAjo, IconNetwork, IconPlatform, IconAuto } from "./icons";
 
 const stats = [
-  { label: "Saving Styles", value: "4", desc: "Ajo to Flex", icon: IconAjo },
-  { label: "Network", value: "Celo", desc: "Mainnet", icon: IconNetwork },
-  { label: "Platforms", value: "3", desc: "Web, Telegram, WhatsApp", icon: IconPlatform },
-  { label: "Payout Model", value: "Auto", desc: "Agent-managed", icon: IconAuto },
+  { label: "Saving Styles", value: "4", desc: "Ajo to Flex", icon: IconAjo, gradient: "from-celo-gold/30 via-celo-gold/10 to-transparent", glowColor: "rgba(251,204,92,0.15)" },
+  { label: "Network", value: "Celo", desc: "Mainnet", icon: IconNetwork, gradient: "from-ng-green/30 via-ng-green/10 to-transparent", glowColor: "rgba(0,135,81,0.15)" },
+  { label: "Platforms", value: "3", desc: "Web, Telegram, WhatsApp", icon: IconPlatform, gradient: "from-celo-purple/30 via-celo-purple/10 to-transparent", glowColor: "rgba(42,60,176,0.15)" },
+  { label: "Payout Model", value: "Auto", desc: "Agent-managed", icon: IconAuto, gradient: "from-white/20 via-white/5 to-transparent", glowColor: "rgba(255,255,255,0.1)" },
 ];
 
-function AnimatedValue({ value }: { value: string }) {
+function AnimatedValue({ value, glowColor }: { value: string; glowColor: string }) {
   const [displayed, setDisplayed] = useState("0");
   const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
@@ -53,19 +53,8 @@ function AnimatedValue({ value }: { value: string }) {
 }
 
 export default function Stats() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "start center"],
-  });
-
-  const opacity = useTransform(scrollYProgress, [0, 0.5, 1], [0.4, 1, 1]);
-
   return (
-    <section
-      ref={sectionRef}
-      className="relative overflow-hidden px-6 py-28"
-    >
+    <section className="relative overflow-hidden px-6 py-28">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-deep-navy via-navy-light to-deep-navy" />
 
       <div
@@ -79,10 +68,10 @@ export default function Stats() {
         }}
       />
 
-      <div className="pointer-events-none absolute -top-40 -left-40 h-96 w-96 rounded-full bg-celo-gold/5 blur-[120px]" />
-      <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-ng-green/5 blur-[120px]" />
+      <div className="pointer-events-none absolute -top-40 -left-40 h-96 w-96 animate-blob rounded-full bg-celo-gold/10 blur-[150px]" />
+      <div className="pointer-events-none absolute -bottom-40 -right-40 h-96 w-96 animate-blob rounded-full bg-ng-green/10 blur-[150px]" style={{ animationDelay: "-5s" }} />
 
-      <motion.div style={{ opacity }} className="relative z-10 mx-auto max-w-6xl">
+      <div className="relative z-10 mx-auto max-w-6xl">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -111,26 +100,33 @@ export default function Stats() {
                 transition={{ duration: 0.7, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
                 className="group relative overflow-hidden rounded-2xl border border-border-glass bg-gradient-to-br from-surface-glass to-white/[0.02] p-6 transition-all duration-500 hover:border-white/15 hover:shadow-2xl hover:shadow-celo-gold/5"
               >
+                <div
+                  className="pointer-events-none absolute -inset-20 opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+                  style={{
+                    background: `radial-gradient(circle at 50% 0%, ${stat.glowColor}, transparent 70%)`,
+                  }}
+                />
+
                 <div className="pointer-events-none absolute -top-8 -right-8 h-20 w-20 rounded-full bg-gradient-to-br from-celo-gold/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-celo-gold/20 to-ng-green/10 text-celo-gold transition-all duration-500 group-hover:scale-110 group-hover:rotate-2 group-hover:from-celo-gold/30 group-hover:to-ng-green/20">
+                <div className="relative mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-celo-gold/20 to-ng-green/10 text-celo-gold transition-all duration-500 group-hover:scale-110 group-hover:rotate-2 group-hover:from-celo-gold/30 group-hover:to-ng-green/20">
                   <Icon className="h-6 w-6" />
                 </div>
 
-                <div className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl">
-                  <AnimatedValue value={stat.value} />
+                <div className="relative bg-gradient-to-r from-white to-white/60 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl">
+                  <AnimatedValue value={stat.value} glowColor={stat.glowColor} />
                 </div>
-                <div className="mt-1 text-sm font-medium text-white/70">
+                <div className="relative mt-1 text-sm font-medium text-white/70">
                   {stat.label}
                 </div>
-                <div className="mt-0.5 text-xs text-text-secondary">
+                <div className="relative mt-0.5 text-xs text-text-secondary">
                   {stat.desc}
                 </div>
               </motion.div>
             );
           })}
         </div>
-      </motion.div>
+      </div>
 
       <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
     </section>

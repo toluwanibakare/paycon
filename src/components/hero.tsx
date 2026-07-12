@@ -1,9 +1,39 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/auth-context";
 import HeroIllustration from "./hero-illustration";
 
+const floatingShapes = [
+  { className: "top-1/4 left-[15%] w-4 h-4 bg-celo-gold/40 rotate-45", delay: 0 },
+  { className: "top-1/3 right-[20%] w-3 h-3 bg-ng-green/40 rotate-12", delay: 1.5 },
+  { className: "bottom-1/3 left-[10%] w-5 h-5 border border-celo-purple/30 rotate-[30deg]", delay: 3 },
+  { className: "top-2/3 right-[15%] w-3 h-3 bg-white/20", delay: 2 },
+  { className: "bottom-1/4 right-[30%] w-4 h-4 border border-celo-gold/20 rounded-full", delay: 4 },
+  { className: "top-[20%] left-[40%] w-2 h-2 bg-celo-gold/60 rounded-full", delay: 0.8 },
+];
+
 export default function Hero() {
+  const { user, connect } = useAuth();
+  const router = useRouter();
+  const [connecting, setConnecting] = useState(false);
+
+  const handleConnect = async () => {
+    if (user) {
+      router.push("/dashboard");
+      return;
+    }
+    setConnecting(true);
+    try {
+      await connect();
+      router.push("/dashboard");
+    } catch {
+      setConnecting(false);
+    }
+  };
+
   return (
     <section className="relative flex min-h-dvh items-center justify-center overflow-hidden px-6">
       <div
@@ -37,17 +67,39 @@ export default function Hero() {
       />
 
       <div
-        className="pointer-events-none absolute -top-60 -left-60 h-[600px] w-[600px] animate-blob rounded-full opacity-30 blur-[150px]"
+        className="pointer-events-none absolute inset-0 opacity-[0.02]"
+        style={{
+          backgroundImage: `radial-gradient(circle at 30% 40%, rgba(251, 204, 92, 0.3) 0%, transparent 50%), radial-gradient(circle at 70% 60%, rgba(0, 135, 81, 0.2) 0%, transparent 50%), radial-gradient(circle at 50% 80%, rgba(42, 60, 176, 0.2) 0%, transparent 50%)`,
+        }}
+      />
+
+      <div className="pointer-events-none absolute -top-60 -left-60 h-[700px] w-[700px] animate-blob rounded-full opacity-40 blur-[180px]"
         style={{ background: "radial-gradient(circle, #FBCC5C 0%, transparent 70%)" }}
       />
-      <div
-        className="pointer-events-none absolute -right-60 top-0 h-[500px] w-[500px] animate-blob rounded-full opacity-20 blur-[150px]"
+      <div className="pointer-events-none absolute -right-60 top-0 h-[600px] w-[600px] animate-blob rounded-full opacity-25 blur-[180px]"
         style={{ background: "radial-gradient(circle, #2A3CB0 0%, transparent 70%)" }}
       />
-      <div
-        className="pointer-events-none absolute -bottom-40 left-1/4 h-[400px] w-[400px] animate-blob rounded-full opacity-15 blur-[120px]"
+      <div className="pointer-events-none absolute -bottom-40 left-1/4 h-[500px] w-[500px] animate-blob rounded-full opacity-20 blur-[150px]"
         style={{ background: "radial-gradient(circle, #008751 0%, transparent 70%)" }}
       />
+
+      {floatingShapes.map((shape, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0 }}
+          animate={{
+            opacity: [0, 1, 1, 0],
+            y: [0, -30, -30, -60],
+          }}
+          transition={{
+            duration: 6,
+            delay: shape.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className={`pointer-events-none absolute ${shape.className}`}
+        />
+      ))}
 
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col items-center pt-24 lg:flex-row lg:gap-16">
         <motion.div
@@ -86,19 +138,47 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="mt-10 flex flex-col items-center gap-4 sm:flex-row lg:justify-start"
           >
-            <a
-              href="#cta"
-              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-7 py-3 text-sm font-semibold text-deep-navy transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-celo-gold/30"
+            <motion.button
+              onClick={handleConnect}
+              disabled={connecting}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-7 py-3 text-sm font-semibold text-deep-navy transition-all duration-500 hover:shadow-2xl hover:shadow-celo-gold/30 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-celo-gold via-celo-gold-dark to-ng-green" />
               <span className="absolute inset-0 bg-gradient-to-r from-ng-green to-celo-purple opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <motion.span
+                animate={connecting ? { x: ["-100%", "200%"] } : {}}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+              />
               <span className="relative z-10 flex items-center gap-2">
-                Launch App
-                <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
+                {connecting ? (
+                  <>
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Connecting...
+                  </>
+                ) : user ? (
+                  <>
+                    Go to Dashboard
+                    <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </>
+                ) : (
+                  <>
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    Connect Wallet
+                  </>
+                )}
               </span>
-            </a>
+            </motion.button>
 
             <a
               href="#telegram"

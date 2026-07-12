@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
 import { IconSend } from "./icons";
 
 const messages = [
@@ -43,7 +44,40 @@ const msgItem = {
   },
 };
 
+function TypingIndicator() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex justify-start"
+    >
+      <div className="flex items-center gap-2 rounded-2xl rounded-bl-md bg-white/10 px-4 py-3">
+        <div className="flex gap-1">
+          {[0, 1, 2].map((i) => (
+            <motion.div
+              key={i}
+              animate={{ y: [0, -4, 0] }}
+              transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+              className="h-1.5 w-1.5 rounded-full bg-text-secondary"
+            />
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function TelegramPreview() {
+  const [showTyping, setShowTyping] = useState(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setShowTyping(true);
+      setTimeout(() => setShowTyping(false), 3000);
+    }, 8000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <section id="telegram" className="relative px-6 py-28">
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-deep-navy via-navy-light/50 to-deep-navy" />
@@ -86,7 +120,7 @@ export default function TelegramPreview() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium text-white">Paycon Bot</span>
-                      <span className="h-2 w-2 rounded-full bg-ng-green" />
+                      <span className="h-2 w-2 rounded-full bg-ng-green animate-glow-pulse" />
                     </div>
                     <div className="text-xs text-text-secondary">Online</div>
                   </div>
@@ -97,13 +131,15 @@ export default function TelegramPreview() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-b from-[#0D0E1F] to-deep-navy p-5">
+                <div className="relative bg-gradient-to-b from-[#0D0E1F] to-deep-navy p-5">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(251,204,92,0.03)_0%,transparent_60%)] pointer-events-none" />
+
                   <motion.div
                     variants={container}
                     initial="hidden"
                     whileInView="show"
                     viewport={{ once: true }}
-                    className="space-y-3"
+                    className="relative space-y-3"
                   >
                     {messages.map((msg, i) => (
                       <motion.div
@@ -124,8 +160,12 @@ export default function TelegramPreview() {
                     ))}
                   </motion.div>
 
-                  <div className="mt-4 flex items-center gap-2 border-t border-border-glass pt-4">
-                    <div className="flex-1 rounded-full border border-border-glass bg-white/5 px-4 py-2.5 text-xs text-text-secondary">
+                  <AnimatePresence>
+                    {showTyping && <TypingIndicator />}
+                  </AnimatePresence>
+
+                  <div className="relative mt-4 flex items-center gap-2 border-t border-border-glass pt-4">
+                    <div className="flex-1 rounded-full border border-border-glass bg-white/5 px-4 py-2.5 text-xs text-text-secondary transition-all duration-300 focus-within:border-celo-gold/30">
                       Type a message...
                     </div>
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-celo-gold to-ng-green transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-celo-gold/30">

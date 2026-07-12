@@ -14,6 +14,9 @@ const steps = [
     gradient: "from-celo-gold/20 to-celo-gold/5",
     border: "border-celo-gold/20",
     textColor: "text-celo-gold",
+    badgeBg: "bg-celo-gold/10",
+    badgeBorder: "border-celo-gold/30",
+    connectorColor: "rgba(251, 204, 92, 0.4)",
   },
   {
     number: "02",
@@ -24,6 +27,9 @@ const steps = [
     gradient: "from-ng-green/20 to-ng-green/5",
     border: "border-ng-green/20",
     textColor: "text-ng-green",
+    badgeBg: "bg-ng-green/10",
+    badgeBorder: "border-ng-green/30",
+    connectorColor: "rgba(0, 135, 81, 0.4)",
   },
   {
     number: "03",
@@ -34,6 +40,9 @@ const steps = [
     gradient: "from-celo-purple/20 to-celo-purple/5",
     border: "border-celo-purple/20",
     textColor: "text-celo-purple",
+    badgeBg: "bg-celo-purple/10",
+    badgeBorder: "border-celo-purple/30",
+    connectorColor: "rgba(42, 60, 176, 0.4)",
   },
   {
     number: "04",
@@ -44,6 +53,9 @@ const steps = [
     gradient: "from-white/10 to-white/5",
     border: "border-white/10",
     textColor: "text-white",
+    badgeBg: "bg-white/10",
+    badgeBorder: "border-white/20",
+    connectorColor: "rgba(255, 255, 255, 0.2)",
   },
 ];
 
@@ -117,16 +129,19 @@ export default function HowItWorks() {
         </motion.div>
 
         <div className="relative">
-          <div
-            className="pointer-events-none absolute left-8 top-0 bottom-0 w-px md:left-1/2 md:-translate-x-px"
-            style={{
-              background: `linear-gradient(to bottom, 
-                rgba(251, 204, 92, 0.3), 
-                rgba(0, 135, 81, 0.3), 
-                rgba(42, 60, 176, 0.3), 
-                rgba(255, 255, 255, 0.1))`,
-            }}
-          />
+          <div className="pointer-events-none absolute left-8 top-0 bottom-0 w-px md:left-1/2 md:-translate-x-px">
+            <div
+              className="h-full w-full animate-gradient-shift"
+              style={{
+                background: `linear-gradient(to bottom,
+                  rgba(251, 204, 92, 0.4),
+                  rgba(0, 135, 81, 0.4),
+                  rgba(42, 60, 176, 0.4),
+                  rgba(255, 255, 255, 0.15))`,
+                backgroundSize: "100% 300%",
+              }}
+            />
+          </div>
 
           <div className="space-y-16">
             {steps.map((step, i) => {
@@ -145,10 +160,13 @@ export default function HowItWorks() {
                   }`}
                 >
                   <div className={`flex-1 ${i % 2 === 1 ? "md:text-right" : ""}`}>
-                    <span className={`text-xs tracking-widest uppercase ${step.textColor}`}>
-                      Step {step.number}
-                    </span>
-                    <h3 className="mt-2 text-2xl font-semibold text-white">
+                    <div className={`mb-3 inline-flex items-center gap-2 rounded-full border ${step.badgeBorder} ${step.badgeBg} px-3 py-1`}>
+                      <div className={`h-1.5 w-1.5 rounded-full ${step.textColor.replace("text", "bg")}`} />
+                      <span className={`text-[10px] font-medium tracking-widest uppercase ${step.textColor}`}>
+                        Step {step.number}
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-semibold text-white">
                       {step.title}
                     </h3>
                     <p className="mt-3 text-sm leading-relaxed text-text-secondary">
@@ -158,8 +176,8 @@ export default function HowItWorks() {
 
                   <div className="relative flex-shrink-0">
                     <motion.div
-                      className={`flex h-16 w-16 items-center justify-center rounded-2xl border ${step.border} bg-gradient-to-br ${step.gradient} ${step.textColor} backdrop-blur-xl`}
-                      whileHover={{ scale: 1.1 }}
+                      className={`flex h-16 w-16 items-center justify-center rounded-2xl border ${step.border} bg-gradient-to-br ${step.gradient} ${step.textColor} backdrop-blur-xl shadow-lg`}
+                      whileHover={{ scale: 1.1, rotate: 3 }}
                       transition={{ type: "spring", stiffness: 300, damping: 15 }}
                     >
                       <Icon className="h-7 w-7" />
