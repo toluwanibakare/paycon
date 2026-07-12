@@ -1,8 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import HeroIllustration from "./hero-illustration";
 
@@ -17,21 +15,10 @@ const floatingShapes = [
 
 export default function Hero() {
   const { user, connect } = useAuth();
-  const router = useRouter();
-  const [connecting, setConnecting] = useState(false);
 
-  const handleConnect = async () => {
-    if (user) {
-      router.push("/dashboard");
-      return;
-    }
-    setConnecting(true);
-    try {
-      await connect();
-      router.push("/dashboard");
-    } catch {
-      setConnecting(false);
-    }
+  const handleConnect = () => {
+    if (user) return;
+    connect();
   };
 
   return (
@@ -140,43 +127,18 @@ export default function Hero() {
           >
             <motion.button
               onClick={handleConnect}
-              disabled={connecting}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-7 py-3 text-sm font-semibold text-deep-navy transition-all duration-500 hover:shadow-2xl hover:shadow-celo-gold/30 disabled:cursor-not-allowed disabled:opacity-60"
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-7 py-3 text-sm font-semibold text-deep-navy transition-all duration-500 hover:shadow-2xl hover:shadow-celo-gold/30"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-celo-gold via-celo-gold-dark to-ng-green" />
               <span className="absolute inset-0 bg-gradient-to-r from-ng-green to-celo-purple opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-              <motion.span
-                animate={connecting ? { x: ["-100%", "200%"] } : {}}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-              />
               <span className="relative z-10 flex items-center gap-2">
-                {connecting ? (
-                  <>
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                    Connecting...
-                  </>
-                ) : user ? (
-                  <>
-                    Go to Dashboard
-                    <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    Connect Wallet
-                  </>
-                )}
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                Connect Wallet
               </span>
             </motion.button>
 

@@ -1,27 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 
 export default function Cta() {
   const { user, connect } = useAuth();
-  const router = useRouter();
-  const [connecting, setConnecting] = useState(false);
 
-  const handleConnect = async () => {
-    if (user) {
-      router.push("/dashboard");
-      return;
-    }
-    setConnecting(true);
-    try {
-      await connect();
-      router.push("/dashboard");
-    } catch {
-      setConnecting(false);
-    }
+  const handleConnect = () => {
+    if (user) return;
+    connect();
   };
 
   return (
@@ -57,25 +44,17 @@ export default function Cta() {
               <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
                 <motion.button
                   onClick={handleConnect}
-                  disabled={connecting}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-8 py-3.5 text-sm font-medium text-deep-navy transition-all duration-500 hover:shadow-2xl hover:shadow-celo-gold/30 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-8 py-3.5 text-sm font-medium text-deep-navy transition-all duration-500 hover:shadow-2xl hover:shadow-celo-gold/30"
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-celo-gold via-celo-gold-dark to-ng-green" />
                   <span className="absolute inset-0 bg-gradient-to-r from-ng-green to-celo-purple opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                  <motion.span
-                    animate={connecting ? { x: ["-100%", "200%"] } : {}}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                  />
                   <span className="relative z-10 flex items-center gap-2">
-                    {connecting ? "Connecting..." : "Connect Wallet"}
-                    {!connecting && (
-                      <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                      </svg>
-                    )}
+                    Connect Wallet
+                    <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
                   </span>
                 </motion.button>
 

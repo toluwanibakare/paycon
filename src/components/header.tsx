@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 
 const navLinks = [
@@ -13,9 +12,7 @@ const navLinks = [
 
 export default function Header() {
   const { user, connect } = useAuth();
-  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
-  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -23,18 +20,9 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const handleConnect = async () => {
-    if (user) {
-      router.push("/dashboard");
-      return;
-    }
-    setConnecting(true);
-    try {
-      await connect();
-      router.push("/dashboard");
-    } catch {
-      setConnecting(false);
-    }
+  const handleConnect = () => {
+    if (user) return;
+    connect();
   };
 
   return (
@@ -84,20 +72,14 @@ export default function Header() {
         ) : (
           <motion.button
             onClick={handleConnect}
-            disabled={connecting}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="group relative overflow-hidden rounded-full px-6 py-2.5 text-sm font-medium text-deep-navy transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
+            className="group relative overflow-hidden rounded-full px-6 py-2.5 text-sm font-medium text-deep-navy transition-all duration-300"
           >
             <span className="absolute inset-0 bg-gradient-to-r from-celo-gold via-celo-gold-dark to-ng-green" />
             <span className="absolute inset-0 bg-gradient-to-r from-ng-green to-celo-purple opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-            <motion.span
-              animate={connecting ? { x: ["-100%", "200%"] } : {}}
-              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-            />
             <span className="relative z-10 flex items-center gap-2">
-              {connecting ? "Connecting..." : "Connect Wallet"}
+              Connect Wallet
             </span>
           </motion.button>
         )}
