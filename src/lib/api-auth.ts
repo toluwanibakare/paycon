@@ -1,5 +1,3 @@
-import { headers } from "next/headers";
-
 const N8N_API_KEY = process.env.N8N_API_KEY ?? "";
 
 export function isAuthenticated(request: Request): boolean {

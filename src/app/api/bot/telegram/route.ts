@@ -63,7 +63,7 @@ function sendMessage(chatId: number, text: string, replyMarkup?: object) {
   }).catch(console.error);
 }
 
-async function handleStart(chatId: number, userId: number, text: string) {
+async function handleStart(chatId: number, _userId: number, text: string) {
   const joinCode = text.split(" ")[1]?.replace("join_", "");
   if (joinCode) {
     // TODO: handle deep link join
@@ -90,7 +90,7 @@ async function handleStart(chatId: number, userId: number, text: string) {
   return Response.json({ ok: true });
 }
 
-async function handleCreate(chatId: number, userId: number) {
+async function handleCreate(chatId: number, _userId: number) {
   sendMessage(
     chatId,
     "Let's set up your group! First, what type of savings?",
@@ -106,7 +106,7 @@ async function handleCreate(chatId: number, userId: number) {
   return Response.json({ ok: true });
 }
 
-async function handleJoin(chatId: number, userId: number, code: string) {
+async function handleJoin(chatId: number, _userId: number, code: string) {
   if (!code) {
     sendMessage(chatId, "Usage: `/join CODE`\n\nExample: `/join SAVE-ABC123`");
     return Response.json({ ok: true });
@@ -122,7 +122,7 @@ async function handleExplore(chatId: number) {
   return Response.json({ ok: true });
 }
 
-async function handleStatus(chatId: number, userId: number, code: string) {
+async function handleStatus(chatId: number, _userId: number, code: string) {
   if (!code) {
     sendMessage(chatId, "Usage: `/status CODE`\n\nExample: `/status SAVE-ABC123`");
     return Response.json({ ok: true });
@@ -132,13 +132,13 @@ async function handleStatus(chatId: number, userId: number, code: string) {
   return Response.json({ ok: true });
 }
 
-async function handleMyGroups(chatId: number, userId: number) {
+async function handleMyGroups(chatId: number, _userId: number) {
   // TODO: fetch user's groups
   sendMessage(chatId, "📁 *Your Groups*\n\nYou haven't joined any groups yet.\n/explore to find one or /create to start one.");
   return Response.json({ ok: true });
 }
 
-async function handleCallback(callbackQuery: { id: string; data: string; message?: { chat: { id: number } } }) {
+async function handleCallback(callbackQuery: { _id: string; data: string; message?: { chat: { id: number } } }) {
   const chatId = callbackQuery.message?.chat.id;
   if (!chatId) return Response.json({ ok: true });
 

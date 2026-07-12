@@ -1,0 +1,29 @@
+=== PAYCON — Registration Complete ===
+
+Attribution Tag: celo_52b6faa793f4
+Participant ID:  8ef96d0a-f93e-4ba2-8565-da7d804358cf
+API Key:         sk-celo-hackathon_bcICGQC2Q484OcvBjtuc3eAM8DOwhbn5-xnvvd5sQf4
+
+Project:  Paycon
+Status:   Draft
+Tracks:   Most Revenue Generated + Askbots
+GitHub:   https://github.com/toluwanibakare/paycon
+Telegram: @official_tmb01
+
+Leaderboard: https://dune.com/celo/agentic-payments-defai-hackathon
+
+=== How to use the tag in every transaction ===
+
+npm install @celo/attribution-tags
+
+import { toDataSuffix } from '@celo/attribution-tags'
+
+// Single tag
+await wallet.sendTransaction({
+  to,
+  value,
+  data: toDataSuffix('celo_52b6faa793f4')
+})
+
+// Multi tag (if you already have your own)
+const tag = toDataSuffix(['your_code', 'celo_52b6faa793f4'])

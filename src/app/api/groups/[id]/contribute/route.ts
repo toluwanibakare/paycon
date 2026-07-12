@@ -1,6 +1,5 @@
 import { requireAuth } from "@/lib/api-auth";
 import { publicClient, getWalletClient, USDM_ADDRESS, ERC20_ABI } from "@/lib/wallet";
-import { getAttributionSuffix } from "@/lib/attribution";
 import { parseUnits } from "viem";
 
 export async function POST(
@@ -29,13 +28,11 @@ export async function POST(
       functionName: "decimals",
     });
 
-    const attributionData = getAttributionSuffix();
     const tx = await walletClient.writeContract({
       address: USDM_ADDRESS,
       abi: ERC20_ABI,
       functionName: "transfer",
       args: [body.to as `0x${string}`, parseUnits(amount, decimals)],
-      dataSuffix: attributionData,
     });
 
     // TODO: record contribution in DB

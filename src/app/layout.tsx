@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Paycon — DeFAI Group Savings",
+  title: "Paycon | Group Savings on Celo",
   description:
-    "AI-powered group savings on Celo. Ajo, goal pools, and emergency funds — managed by your agent.",
+    "AI-powered group savings on the Celo blockchain. Run Ajo savings circles, goal pools, and emergency funds with your agent.",
+  openGraph: {
+    title: "Paycon | Group Savings on Celo",
+    description:
+      "AI-powered group savings on the Celo blockchain. Run Ajo savings circles, goal pools, and emergency funds with your agent.",
+  },
 };
 
 export default function RootLayout({
@@ -13,9 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-gray-950 text-gray-100 antialiased">
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
