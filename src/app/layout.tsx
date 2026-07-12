@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Web3ModalProvider } from "@/context/web3modal-provider";
 import { AuthProvider } from "@/context/auth-context";
 
 export const metadata: Metadata = {
@@ -22,9 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Web3ModalProvider>
-          <AuthProvider>{children}</AuthProvider>
-        </Web3ModalProvider>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

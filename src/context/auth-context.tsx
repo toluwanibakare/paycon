@@ -1,9 +1,6 @@
 "use client";
 
-import { createContext, useContext, useCallback, useEffect, useRef, useState } from "react";
-import { useAccount, useSignMessage, useDisconnect } from "wagmi";
-import { useWeb3Modal } from "@web3modal/wagmi/react";
-import { useRouter } from "next/navigation";
+import { createContext, useContext, useCallback, useEffect, useState } from "react";
 
 interface User {
   id: string;
@@ -24,18 +21,41 @@ const AuthContext = createContext<AuthContextType>({
   disconnect: async () => {},
 });
 
+async function switchToCelo() {
+  const ethereum = (window as any).ethereum;
+  if (!ethereum) return false;
+
+  try {
+    await ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: "0xa4ec" }],
+    });
+    return true;
+  } catch (switchError: any) {
+    if (switchError.code === 4902) {
+      try {
+        await ethereum.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: "0xa4ec",
+            chainName: "Celo Mainnet",
+            nativeCurrency: { name: "CELO", symbol: "CELO", decimals: 18 },
+            rpcUrls: ["https://forno.celo.org"],
+            blockExplorerUrls: ["https://celoscan.io"],
+          }],
+        });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [signingIn, setSigningIn] = useState(false);
-  const [pendingConnect, setPendingConnect] = useState(false);
-  const router = useRouter();
-  const finished = useRef(false);
-
-  const { address, isConnected } = useAccount();
-  const { signMessageAsync } = useSignMessage();
-  const { disconnect: wagmiDisconnect } = useDisconnect();
-  const { open } = useWeb3Modal();
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -44,64 +64,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return r.json();
       })
       .then((data) => {
-        if (data.user) {
-          setUser(data.user);
-          finished.current = true;
-        }
+        if (data.user) setUser(data.user);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    if (!isConnected || !address || user || signingIn || finished.current) return;
-    setSigningIn(true);
-    (async () => {
-      try {
-        const nonceRes = await fetch("/api/auth/nonce", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address }),
-        });
-        if (!nonceRes.ok) throw new Error("Failed to get nonce");
-        const { nonce } = await nonceRes.json();
-
-        const message = `Welcome to Paycon\n\nSign this message to verify your wallet and access your dashboard.\n\nAddress: ${address}\nNonce: ${nonce}\n\nThis request will not trigger a blockchain transaction or cost any gas fees.`;
-
-        const signature = await signMessageAsync({ message });
-
-        const verifyRes = await fetch("/api/auth/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address, signature, nonce }),
-        });
-        if (!verifyRes.ok) throw new Error("Verification failed");
-
-        setUser({ id: address.toLowerCase(), address });
-        finished.current = true;
-        if (pendingConnect) {
-          setPendingConnect(false);
-          router.push("/dashboard");
-        }
-      } catch {
-        wagmiDisconnect();
-      } finally {
-        setSigningIn(false);
-      }
-    })();
-  }, [isConnected, address]);
-
   const connect = useCallback(async () => {
-    setPendingConnect(true);
-    open();
-  }, [open]);
+    const ethereum = (window as any).ethereum;
+    if (!ethereum) throw new Error("No wallet found");
+
+    const accounts: string[] = await ethereum.request({
+      method: "eth_requestAccounts",
+    });
+
+    if (!accounts?.length) throw new Error("No accounts found");
+
+    const address = accounts[0].toLowerCase();
+
+    const nonceRes = await fetch("/api/auth/nonce", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address }),
+    });
+    if (!nonceRes.ok) throw new Error("Failed to get nonce");
+    const { nonce } = await nonceRes.json();
+
+    const message = `Welcome to Paycon\n\nSign this message to verify your wallet and access your dashboard.\n\nAddress: ${address}\nNonce: ${nonce}\n\nThis request will not trigger a blockchain transaction or cost any gas fees.`;
+
+    const signature = await ethereum.request({
+      method: "personal_sign",
+      params: [message, address],
+    });
+
+    const verifyRes = await fetch("/api/auth/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address, signature, nonce }),
+    });
+    if (!verifyRes.ok) throw new Error("Verification failed");
+
+    setUser({ id: address, address });
+  }, []);
 
   const disconnect = useCallback(async () => {
     await fetch("/api/auth/me", { method: "DELETE" });
-    wagmiDisconnect();
     setUser(null);
-    finished.current = false;
-  }, [wagmiDisconnect]);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, loading, connect, disconnect }}>
