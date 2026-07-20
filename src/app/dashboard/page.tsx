@@ -1,7 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useAccount } from "wagmi";
 import { useAuth } from "@/context/auth-context";
+import { useState, useEffect } from "react";
 
 const container = {
   hidden: { opacity: 0 },
@@ -13,22 +15,52 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
 
-const statCards = [
-  { label: "Active Groups", value: "3", change: "+1 this week", gradient: "from-celo-gold/20 to-amber-500/10" },
-  { label: "Total Saved", value: "$1,240", change: "+$340 this month", gradient: "from-ng-green/20 to-emerald-500/10" },
-  { label: "Contributions", value: "24", change: "100% on time", gradient: "from-celo-purple/20 to-indigo-500/10" },
-  { label: "Payouts Received", value: "$500", change: "Next: Cycle #3", gradient: "from-celo-gold/10 to-celo-purple/10" },
-];
+interface GroupData {
+  id: string;
+  name: string;
+  savingType: string;
+  contributionAmount: string;
+  poolBalance: string;
+  status: string;
+}
 
-const activity = [
-  { type: "contribution", group: "Office Fund", amount: "$20", time: "2 hours ago", status: "confirmed" },
-  { type: "payout", group: "Rent Pool", amount: "$400", time: "3 days ago", status: "confirmed" },
-  { type: "join", group: "Side Hustle Club", amount: "", time: "5 days ago", status: "confirmed" },
-  { type: "reminder", group: "Office Fund", amount: "$20", time: "7 days ago", status: "pending" },
-];
+interface ContributionData {
+  id: string;
+  groupId: string;
+  amount: string;
+  status: string;
+  createdAt: string;
+}
 
 export default function DashboardOverview() {
+  const { address } = useAccount();
   const { user } = useAuth();
+  const [groups, setGroups] = useState<GroupData[]>([]);
+  const [recentContributions, setRecentContributions] = useState<ContributionData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    Promise.all([
+      fetch("/api/groups?my=true").then((r) => r.json()),
+      fetch("/api/groups?my=true&limit=5").then((r) => r.json()),
+    ])
+      .then(([groupsData]) => {
+        setGroups(groupsData.groups ?? []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [user]);
+
+  const activeCount = groups.filter((g) => g.status === "active").length;
+  const totalSaved = groups.reduce((sum, g) => sum + Number.parseFloat(g.poolBalance || "0"), 0);
+  const contributionCount = recentContributions.length;
+
+  const statCards = [
+    { label: "Active Groups", value: String(activeCount), change: `${groups.length} total`, gradient: "from-celo-gold/20 to-amber-500/10" },
+    { label: "Total Saved", value: `$${totalSaved.toFixed(2)}`, change: "Across all groups", gradient: "from-ng-green/20 to-emerald-500/10" },
+    { label: "Wallet", value: address ? `${address.slice(0, 6)}...` : "---", change: "Connected", gradient: "from-celo-purple/20 to-indigo-500/10" },
+  ];
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
@@ -41,7 +73,7 @@ export default function DashboardOverview() {
         </p>
       </motion.div>
 
-      <motion.div variants={item} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <motion.div variants={item} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {statCards.map((card) => (
           <div
             key={card.label}
@@ -66,50 +98,43 @@ export default function DashboardOverview() {
       <div className="grid gap-8 xl:grid-cols-2">
         <motion.div variants={item} className="rounded-2xl border border-border-glass bg-surface-glass">
           <div className="border-b border-border-glass px-6 py-4">
-            <h3 className="text-sm font-semibold text-white">Recent Activity</h3>
+            <h3 className="text-sm font-semibold text-white">My Groups</h3>
           </div>
           <div className="divide-y divide-border-glass">
-            {activity.length === 0 && (
+            {loading ? (
+              <p className="px-6 py-8 text-center text-sm text-text-secondary">Loading...</p>
+            ) : groups.length === 0 ? (
               <p className="px-6 py-8 text-center text-sm text-text-secondary">
-                No activity yet. Join or create a group to get started.
+                No groups yet. Join or create a group to get started.
               </p>
+            ) : (
+              groups.map((g) => (
+                <a
+                  key={g.id}
+                  href={`/dashboard/groups/${g.id}`}
+                  className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-surface-glass-hover"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-celo-gold/20 text-xs font-bold text-celo-gold">
+                    {g.name[0]}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-white">{g.name}</p>
+                    <p className="text-xs text-text-secondary">
+                      {g.savingType} &middot; ${g.contributionAmount}/cycle
+                    </p>
+                  </div>
+                  <div
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
+                      g.status === "active"
+                        ? "bg-ng-green/10 text-ng-green"
+                        : "bg-text-secondary/10 text-text-secondary"
+                    }`}
+                  >
+                    {g.status}
+                  </div>
+                </a>
+              ))
             )}
-            {activity.map((act, i) => (
-              <div key={i} className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-surface-glass-hover">
-                <div
-                  className={`flex h-9 w-9 items-center justify-center rounded-xl text-xs font-bold ${
-                    act.type === "contribution"
-                      ? "bg-ng-green/20 text-ng-green"
-                      : act.type === "payout"
-                        ? "bg-celo-gold/20 text-celo-gold"
-                        : act.type === "join"
-                          ? "bg-celo-purple/20 text-celo-purple"
-                          : "bg-surface-glass text-text-secondary"
-                  }`}
-                >
-                  {act.type === "contribution" ? "C" : act.type === "payout" ? "P" : act.type === "join" ? "J" : "R"}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-white">
-                    {act.type === "contribution" && `Contributed ${act.amount} to `}
-                    {act.type === "payout" && `Received ${act.amount} from `}
-                    {act.type === "join" && "Joined "}
-                    {act.type === "reminder" && `${act.amount} contribution due for `}
-                    <span className="font-medium text-celo-gold">{act.group}</span>
-                  </p>
-                  <p className="text-xs text-text-secondary">{act.time}</p>
-                </div>
-                <div
-                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
-                    act.status === "confirmed"
-                      ? "bg-ng-green/10 text-ng-green"
-                      : "bg-celo-gold/10 text-celo-gold"
-                  }`}
-                >
-                  {act.status}
-                </div>
-              </div>
-            ))}
           </div>
         </motion.div>
 
@@ -138,7 +163,7 @@ export default function DashboardOverview() {
                 desc: "Manage savings on the go",
                 icon: "T",
                 gradient: "from-celo-purple to-celo-gold",
-                href: "https://t.me/PayconBot",
+                href: "https://t.me/PayconAgentBot",
               },
             ].map((action) => (
               <a

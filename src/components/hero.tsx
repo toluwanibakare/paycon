@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useAuth } from "@/context/auth-context";
+import { ConnectButton } from "./connect-button";
 import HeroIllustration from "./hero-illustration";
 
 const floatingShapes = [
@@ -14,13 +14,6 @@ const floatingShapes = [
 ];
 
 export default function Hero() {
-  const { user, connect } = useAuth();
-
-  const handleConnect = () => {
-    if (user) return;
-    connect();
-  };
-
   return (
     <section className="relative flex min-h-dvh items-center justify-center overflow-hidden px-6">
       <div
@@ -125,22 +118,7 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
             className="mt-10 flex flex-col items-center gap-4 sm:flex-row lg:justify-start"
           >
-            <motion.button
-              onClick={handleConnect}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-7 py-3 text-sm font-semibold text-deep-navy transition-all duration-500 hover:shadow-2xl hover:shadow-celo-gold/30"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-celo-gold via-celo-gold-dark to-ng-green" />
-              <span className="absolute inset-0 bg-gradient-to-r from-ng-green to-celo-purple opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-              <span className="relative z-10 flex items-center gap-2">
-                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                Connect Wallet
-              </span>
-            </motion.button>
+            <ConnectButton onConnect={() => window.location.href = "/dashboard"} />
 
             <a
               href="#telegram"

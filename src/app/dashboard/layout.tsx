@@ -4,6 +4,7 @@ import { useAuth } from "@/context/auth-context";
 import { useRouter, usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useAccount, useDisconnect } from "wagmi";
 
 const navItems = [
   { label: "Overview", href: "/dashboard", icon: "O" },
@@ -12,7 +13,9 @@ const navItems = [
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, disconnect } = useAuth();
+  const { user, loading } = useAuth();
+  const { address } = useAccount();
+  const { disconnect: wagmiDisconnect } = useDisconnect();
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -36,7 +39,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (!user) return null;
 
-  const shortAddress = `${user.address.slice(0, 6)}...${user.address.slice(-4)}`;
+  const displayAddress = address ?? user.address;
+  const shortAddress = `${displayAddress.slice(0, 6)}...${displayAddress.slice(-4)}`;
 
   const pageTitle =
     pathname === "/dashboard"
@@ -48,6 +52,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           : pathname.startsWith("/dashboard/groups/")
             ? "Group Details"
             : "";
+
+  const handleDisconnect = async () => {
+    await fetch("/api/auth/me", { method: "DELETE" });
+    wagmiDisconnect();
+    router.push("/");
+  };
 
   return (
     <div className="flex min-h-dvh bg-deep-navy">
@@ -110,7 +120,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <p className="truncate text-xs font-medium text-white">{shortAddress}</p>
             </div>
             <button
-              onClick={disconnect}
+              onClick={handleDisconnect}
               className="text-xs text-text-secondary transition-colors hover:text-red-400"
             >
               Exit

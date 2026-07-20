@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
+import "@rainbow-me/rainbowkit/styles.css";
 import "./globals.css";
-import { AuthProvider } from "@/context/auth-context";
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
   title: "Paycon | Group Savings on Celo",
@@ -21,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthProvider>{children}</AuthProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

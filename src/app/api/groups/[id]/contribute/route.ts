@@ -1,52 +1,64 @@
-import { requireAuth } from "@/lib/api-auth";
-import { publicClient, getWalletClient, USDM_ADDRESS, ERC20_ABI } from "@/lib/wallet";
-import { parseUnits } from "viem";
+import { requireUser } from "@/lib/api-auth";
+import { db } from "@/lib/db";
+import { members, contributions, groups } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const authError = requireAuth(request);
-  if (authError) return authError;
+  const user = await requireUser(request);
+  if (user instanceof Response) return user;
 
   const { id } = await params;
+
+  const [group] = await db.select().from(groups).where(eq(groups.id, id)).limit(1);
+  if (!group) return Response.json({ error: "Group not found" }, { status: 404 });
+
+  const [member] = await db
+    .select()
+    .from(members)
+    .where(and(eq(members.groupId, id), eq(members.userId, user.id)))
+    .limit(1);
+
+  if (!member) return Response.json({ error: "Not a member of this group" }, { status: 403 });
+
   const body = await request.json();
-  const { userId, amount, privateKey } = body;
+  const { txHash } = body;
+  const amount = body.amount ?? group.contributionAmount;
 
-  if (!userId || !amount || !privateKey) {
-    return Response.json(
-      { error: "Missing userId, amount, or privateKey" },
-      { status: 400 },
-    );
+  const [contribution] = await db
+    .insert(contributions)
+    .values({
+      groupId: id,
+      memberId: member.id,
+      amount: amount.toString(),
+      token: "USDm",
+      txHash,
+      cycleNumber: group.currentCycle,
+      status: txHash ? "confirmed" : "pending",
+    })
+    .returning();
+
+  if (txHash) {
+    await db
+      .update(members)
+      .set({
+        totalContributed: (
+          Number.parseFloat(member.totalContributed) + Number.parseFloat(amount.toString())
+        ).toString(),
+      })
+      .where(eq(members.id, member.id));
+
+    await db
+      .update(groups)
+      .set({
+        poolBalance: (
+          Number.parseFloat(group.poolBalance) + Number.parseFloat(amount.toString())
+        ).toString(),
+      })
+      .where(eq(groups.id, id));
   }
 
-  try {
-    const walletClient = getWalletClient(privateKey as `0x${string}`);
-    const decimals = await publicClient.readContract({
-      address: USDM_ADDRESS,
-      abi: ERC20_ABI,
-      functionName: "decimals",
-    });
-
-    const tx = await walletClient.writeContract({
-      address: USDM_ADDRESS,
-      abi: ERC20_ABI,
-      functionName: "transfer",
-      args: [body.to as `0x${string}`, parseUnits(amount, decimals)],
-    });
-
-    // TODO: record contribution in DB
-
-    return Response.json({
-      contribution: {
-        txHash: tx,
-        amount,
-        token: "USDm",
-        status: "confirmed",
-      },
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Transaction failed";
-    return Response.json({ error: message }, { status: 500 });
-  }
+  return Response.json({ contribution }, { status: 201 });
 }

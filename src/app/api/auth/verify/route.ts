@@ -2,6 +2,7 @@ import { createSession, verifyAndConsumeNonce } from "@/lib/auth/store";
 import { setSessionCookie } from "@/lib/auth/cookies";
 import { buildSignInMessage } from "@/lib/auth/message";
 import { publicClient } from "@/lib/wallet";
+import { getOrCreateUser } from "@/lib/api-auth";
 import { recoverMessageAddress } from "viem";
 
 export async function POST(request: Request) {
@@ -25,10 +26,13 @@ export async function POST(request: Request) {
       return Response.json({ error: "Signature does not match address" }, { status: 401 });
     }
 
-    const token = createSession(address.toLowerCase(), address);
+    const dbUser = await getOrCreateUser(address);
+    const userId = dbUser.id;
+
+    const token = createSession(userId, address);
     await setSessionCookie(token);
 
-    return Response.json({ token, address });
+    return Response.json({ token, address, userId });
   } catch {
     return Response.json({ error: "Verification failed" }, { status: 400 });
   }

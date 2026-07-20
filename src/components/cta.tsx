@@ -1,16 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useAuth } from "@/context/auth-context";
+import { ConnectButton } from "./connect-button";
 
 export default function Cta() {
-  const { user, connect } = useAuth();
-
-  const handleConnect = () => {
-    if (user) return;
-    connect();
-  };
-
   return (
     <section id="cta" className="relative px-6 py-28">
       <div
@@ -42,21 +35,7 @@ export default function Cta() {
               </p>
 
               <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-                <motion.button
-                  onClick={handleConnect}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full px-8 py-3.5 text-sm font-medium text-deep-navy transition-all duration-500 hover:shadow-2xl hover:shadow-celo-gold/30"
-                >
-                  <span className="absolute inset-0 bg-gradient-to-r from-celo-gold via-celo-gold-dark to-ng-green" />
-                  <span className="absolute inset-0 bg-gradient-to-r from-ng-green to-celo-purple opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                  <span className="relative z-10 flex items-center gap-2">
-                    Connect Wallet
-                    <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
-                  </span>
-                </motion.button>
+                <ConnectButton onConnect={() => window.location.href = "/dashboard"} />
 
                 <a
                   href="#telegram"
